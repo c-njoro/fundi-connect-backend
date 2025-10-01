@@ -1,0 +1,36 @@
+{
+    createUser: {
+    "email": "mwanikic314@gmail.com",
+    "phone": "0720128694",
+    "password": "mwaniki123",
+    "profile": {
+        "firstName": "Charles",
+        "lastName": "Mwaniki"
+    },
+    "location": {
+        "county": "Nairobi",
+        "city": "Nairobi",
+        "area": "Donholm",
+         "coordinates": {
+      "type": "Point",
+      "coordinates": [36.8823, -1.3005] 
+    }
+    }
+},
+
+login: {
+
+    "phone": "0720128694",
+    "password": "mwaniki123"
+
+}
+
+become-fundi:(Authorization) {
+    "userId": "68dced7c62e0218dae02eed7"
+    
+},
+
+fundi-pending-applicatios: (Authorization, Admin){}
+
+
+}
