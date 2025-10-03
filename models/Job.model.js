@@ -100,6 +100,7 @@ const workProgressSchema = new mongoose.Schema(
     stage: {
       type: String,
       enum: ['started', 'in_progress', 'completed'],
+      default: 'in_progress',
       required: true,
     },
   },

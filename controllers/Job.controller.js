@@ -2,6 +2,8 @@ const Job = require('../models/Job.model');
 const User = require('../models/User.model');
 const Service = require('../models/Service.model');
 
+
+
 // @desc    Create a new job
 // @route   POST /api/jobs
 // @access  Private (Customer)
@@ -347,6 +349,8 @@ exports.submitProposal = async (req, res) => {
     // Populate the new proposal
     await job.populate('proposals.fundiId', 'profile fundiProfile.ratings');
 
+   
+
     res.status(201).json({
       success: true,
       message: 'Proposal submitted successfully',
@@ -639,6 +643,8 @@ exports.approveCompletion = async (req, res) => {
       job.payment.releaseDate = new Date();
     }
 
+    
+
     await job.save();
 
     // Update fundi's completed jobs count
@@ -646,6 +652,18 @@ exports.approveCompletion = async (req, res) => {
     if (fundi) {
       await fundi.incrementCompletedJobs();
     }
+
+    //add this job to fundi portfolio
+    if(fundi){
+      fundi.fundiProfile.portfolio.push({
+        title: job.jobDetails.title,
+        description: job.jobDetails.description,
+        images: job.completion.completionImages,
+        completedDate: job.completion.completedAt,
+      });
+      await fundi.save();
+    }
+  
 
     res.status(200).json({
       success: true,

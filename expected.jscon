@@ -1,5 +1,4 @@
-{
-    createUser: {
+createUser:() {
     "email": "mwanikic314@gmail.com",
     "phone": "0720128694",
     "password": "mwaniki123",
@@ -32,5 +31,99 @@ become-fundi:(Authorization) {
 
 fundi-pending-applicatios: (Authorization, Admin){}
 
-
+cretae-a-service(admin): {
+  "name": "Plumbing",
+  "category": "Home Maintenance",
+  "description": "Professional plumbing services for households and businesses",
+  "icon": "https://cdn-icons-png.flaticon.com/512/123/123456.png",
+  "subServices": [
+    {
+      "name": "Pipe Installation",
+      "description": "Installation of new water and drainage pipes",
+      "estimatedDuration": 180,
+      "suggestedPrice": {
+        "min": 3000,
+        "max": 6000,
+        "currency": "KES"
+      }
+    },
+    {
+      "name": "Leak Repair",
+      "description": "Fixing leaking pipes, taps, and joints",
+      "estimatedDuration": 90,
+      "suggestedPrice": {
+        "min": 800,
+        "max": 2500,
+        "currency": "KES"
+      }
+    },
+    {
+      "name": "Drain Unclogging",
+      "description": "Clearing blocked sinks, toilets, and drainage systems",
+      "estimatedDuration": 60,
+      "suggestedPrice": {
+        "min": 1500,
+        "max": 4000,
+        "currency": "KES"
+      }
+    }
+  ]
 }
+
+
+job-creation(anyUser): {
+  "serviceId": "68dfbe95578f95c47167e63a",
+  "subService": "Socket Installation",
+  "jobDetails": {
+    "title": "Add two new wall sockets",
+    "description": "Need an electrician to install two additional sockets in the living room.",
+    "images": [
+      "https://example.com/uploads/socket_install1.jpg"
+    ],
+    "urgency": "low",
+    "estimatedBudget": {
+      "min": 1000,
+      "max": 2500,
+      "currency": "KES"
+    }
+  },
+  "location": {
+    "address": "45 Kenyatta Avenue",
+    "county": "Nakuru",
+    "city": "Nakuru",
+    "area": "Milimani",
+    "coordinates": {
+      "lat": -0.3031,
+      "lng": 36.0800
+    },
+    "landmark": "Next to Milimani Hospital"
+  },
+  "scheduling": {
+    "preferredDate": "2025-10-07",
+    "preferredTime": "14:00",
+    "flexibility": "strict"
+  },
+  "payment": {
+    "method": "cash",
+    "status": "pending"
+  }
+}
+
+job-application: (fundiOnly){
+    "proposedPrice": 2500,
+    "estimatedDuration": 5,
+    "proposal": "I would like to propose for this job, i am available and ready to work with you."
+}
+
+job-work-progress: (job customer, assigned fundi){
+    "images": ["image1", "image2"],
+    "message": "the job has started, i have already cut the desired pipes in place"
+}
+
+job-completion(assigned fundi){
+    "completionImages": ["image12", "image22"],
+    "completionNotes": "the job has been completed, i have fixed the new pipes and managed the leaking spaces"
+    ??"actualPrice": number
+}
+
+

@@ -7,6 +7,9 @@ const connectDB = require('./config/db');
 const userRoutes = require('./routes/User.route');
 const jobRoutes = require('./routes/Job.route');
 const serviceRoutes = require('./routes/Service.route');
+const reviewRoutes = require('./routes/Review.route');
+const notificationRoutes = require('./routes/Notification.route');
+const messageRoutes = require('./routes/Message.route');
 
 // Load environment variables
 dotenv.config();
@@ -25,6 +28,9 @@ app.use(express.json()); // Parse JSON request bodies
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/services', serviceRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/messages', messageRoutes);
 
 // Routes
 app.get('/', (req, res) => {
