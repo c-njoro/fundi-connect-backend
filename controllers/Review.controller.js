@@ -1,7 +1,8 @@
 const Review = require('../models/Review.model');
 const Job = require('../models/Job.model');
 const User = require('../models/User.model');
-const notificationController = require('./Notification.controller');
+const notificationService = require('../services/notification.service');
+
 
 // @desc    Create a review
 // @route   POST /api/reviews
@@ -18,7 +19,7 @@ exports.createReview = async (req, res) => {
         message: 'Job not found',
       });
     }
-
+      
     // Verify job is completed and approved
     if (job.status !== 'completed' || !job.completion.customerApproved) {
       return res.status(400).json({
@@ -83,7 +84,7 @@ exports.createReview = async (req, res) => {
       }
 
       // Send notification to fundi
-      await notificationController.notifyReviewReceived(
+      await notificationService.notifyReviewReceived(
         revieweeId,
         rating,
         newReview._id

@@ -127,3 +127,21 @@ job-completion(assigned fundi){
 }
 
 
+review-a-job(customer): {
+  "jobId": "68dfc20d578f95c47167e643",
+  "revieweeId": "68dced7c62e0218dae02eed7",
+  "rating": 5,
+  "review": "The fundi did an excellent job fixing my leaking sink. Very professional and quick.",
+  "categories": {
+    "quality": 5,
+    "timeliness": 5,
+    "communication": 4,
+    "professionalism": 5
+  },
+  "images": [
+    "https://example.com/reviews/job123_before.jpg",
+    "https://example.com/reviews/job123_after.jpg"
+  ]
+}
+
+

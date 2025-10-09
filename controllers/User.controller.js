@@ -272,10 +272,19 @@ exports.updateFundiProfile = async (req, res) => {
       }
     });
 
+    const currentTime = new Date();
+
     // Update availability schedule if provided
     if (req.body.schedule) {
       user.fundiProfile.availability.schedule = req.body.schedule;
+      user.fundiProfile.availability.lastUpdated = currentTime;
     }
+
+    if(req.body.currentStatus){
+      user.fundiProfile.availability.currentStatus = req.body.currentStatus;
+      user.fundiProfile.availability.lastUpdated = currentTime;
+    }
+
 
     await user.save();
 

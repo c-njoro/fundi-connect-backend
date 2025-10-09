@@ -1,6 +1,7 @@
 const Job = require('../models/Job.model');
 const User = require('../models/User.model');
 const Service = require('../models/Service.model');
+const notificationService = require('../services/notification.service');
 
 
 
@@ -286,6 +287,14 @@ exports.deleteJob = async (req, res) => {
     // Otherwise delete it
     await job.deleteOne();
 
+    if (job.fundiId && job.status === 'assigned') {
+      await notificationService.notifyJobCancelled(
+        job.fundiId,
+        job._id,
+        job.jobDetails.title
+      );
+    }
+
     res.status(200).json({
       success: true,
       message: 'Job deleted successfully',
@@ -348,6 +357,13 @@ exports.submitProposal = async (req, res) => {
 
     // Populate the new proposal
     await job.populate('proposals.fundiId', 'profile fundiProfile.ratings');
+
+    const fundi = await User.findById(req.userId);
+    await notificationService.notifyJobApplied(
+      job.customerId,
+      job._id,
+      fundi.profile.firstName
+    );
 
    
 
@@ -592,6 +608,13 @@ exports.completeJob = async (req, res) => {
 
     await job.save();
 
+    const fundi = await User.findById(req.userId);
+    await notificationService.notifyJobCompleted(
+      job.customerId,
+      job._id,
+      fundi.profile.firstName
+    );
+
     res.status(200).json({
       success: true,
       message: 'Job marked as completed. Awaiting customer approval.',
@@ -646,6 +669,12 @@ exports.approveCompletion = async (req, res) => {
     
 
     await job.save();
+
+    await notificationService.notifyPaymentReceived(
+      job.fundiId,
+      job.agreedPrice || job.actualPrice,
+      job._id
+    );
 
     // Update fundi's completed jobs count
     const fundi = await User.findById(job.fundiId);

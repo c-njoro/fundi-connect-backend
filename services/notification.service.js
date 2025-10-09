@@ -1,9 +1,30 @@
-// services/notification.service.js
 const Notification = require('../models/Notification.model');
-const notificationController = require('../controllers/Notification.controller');
 
-// Generic creator
-const createNotification = notificationController.createNotification;
+// ==================================================
+// NOTIFICATION SERVICE
+// Helper functions to create notifications
+// Use these in your controllers instead of importing controller
+// ==================================================
+
+// Generic notification creator
+const createNotification = async (userId, type, title, message, data = {}) => {
+  try {
+    const notification = new Notification({
+      userId,
+      type,
+      title,
+      message,
+      data,
+    });
+
+    await notification.save();
+    return notification;
+  } catch (error) {
+    console.error('Error creating notification:', error);
+    // Don't throw - notifications shouldn't break main flow
+    return null;
+  }
+};
 
 // Job applied notification
 const notifyJobApplied = async (customerId, jobId, fundiName) => {
@@ -71,6 +92,18 @@ const notifyReviewReceived = async (fundiId, rating, reviewId) => {
   );
 };
 
+// New message notification (optional - use if not using Socket.io)
+const notifyNewMessage = async (receiverId, senderId, senderName, jobId) => {
+  return await createNotification(
+    receiverId,
+    'new_message',
+    'New Message',
+    `${senderName} sent you a message`,
+    { jobId, senderId, type: 'message' }
+  );
+};
+
+// Export all notification functions
 module.exports = {
   createNotification,
   notifyJobApplied,
@@ -79,4 +112,5 @@ module.exports = {
   notifyJobCompleted,
   notifyJobCancelled,
   notifyReviewReceived,
+  notifyNewMessage,
 };
