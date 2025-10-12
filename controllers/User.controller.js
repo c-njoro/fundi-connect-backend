@@ -1,6 +1,32 @@
 const User = require('../models/User.model');
 const jwt = require('jsonwebtoken');
 
+// Ensure location.coordinates is always valid GeoJSON
+const ensureValidGeoJSON = (location = {}) => {
+  if (!location.coordinates || !Array.isArray(location.coordinates.coordinates)) {
+    // Default fallback coordinates (Nairobi CBD)
+    location.coordinates = {
+      type: 'Point',
+      coordinates: [36.8219, -1.2921], // [longitude, latitude]
+    };
+  } else if (
+    location.coordinates.coordinates.length !== 2 ||
+    typeof location.coordinates.coordinates[0] !== 'number' ||
+    typeof location.coordinates.coordinates[1] !== 'number'
+  ) {
+    // Fix malformed coordinate values
+    location.coordinates = {
+      type: 'Point',
+      coordinates: [36.8219, -1.2921],
+    };
+  }
+
+  // Always enforce correct type
+  location.coordinates.type = 'Point';
+  return location;
+};
+
+
 // Helper function to generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -132,6 +158,10 @@ exports.getProfile = async (req, res) => {
       });
     }
 
+    if (user.isFundi) {
+      await user.getFundiProfileWithServices();
+    }
+
     res.status(200).json({
       success: true,
       data: user,
@@ -171,13 +201,17 @@ exports.updateProfile = async (req, res) => {
     }
 
     // Update location
-    if (location) {
-      Object.keys(location).forEach((key) => {
-        if (location[key] !== undefined) {
-          user.location[key] = location[key];
-        }
-      });
+   // Update location safely
+if (location) {
+  Object.keys(location).forEach((key) => {
+    if (location[key] !== undefined) {
+      user.location[key] = location[key];
     }
+  });
+
+  // Ensure valid GeoJSON before saving
+  user.location = ensureValidGeoJSON(user.location);
+}
 
     await user.save();
 
@@ -285,6 +319,7 @@ exports.updateFundiProfile = async (req, res) => {
       user.fundiProfile.availability.lastUpdated = currentTime;
     }
 
+    user.location = ensureValidGeoJSON(user.location);
 
     await user.save();
 
@@ -294,6 +329,7 @@ exports.updateFundiProfile = async (req, res) => {
       data: user.toSafeObject(),
     });
   } catch (error) {
+    console.log("Error updating fundi profile", error);
     res.status(400).json({
       success: false,
       message: 'Failed to update fundi profile',
