@@ -34,6 +34,26 @@ const generateToken = (userId) => {
   });
 };
 
+
+//get all users
+// @route   GET /api/users/admin/all
+// @access  Admin only
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select('-password');
+    res.status(200).json({
+      success: true,
+      data: users
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get all users',
+      error: error.message,
+    });
+  }
+};
+
 // @desc    Register a new user
 // @route   POST /api/users/register
 // @access  Public

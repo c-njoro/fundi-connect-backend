@@ -16,12 +16,12 @@ router.patch('/:id/proposals/:proposalIndex/accept', protect, jobController.acce
 router.patch('/:id/approve', protect, jobController.approveCompletion);
 
 // Protected fundi routes
-router.post('/:id/proposals', protect, fundiOnly, jobController.submitProposal);
+router.post('/:id/submit-proposal', protect, fundiOnly, jobController.submitProposal);
 router.patch('/:id/start', protect, jobController.startJob);
 router.patch('/:id/complete', protect, jobController.completeJob);
 
 // Protected routes (both customer and fundi)
-router.get('/my-jobs', protect, jobController.getMyJobs);
+router.get('/me/my-jobs', protect, jobController.getMyJobs);
 router.post('/:id/progress', protect, jobController.addWorkProgress);
 
 module.exports = router;

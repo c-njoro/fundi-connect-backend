@@ -23,6 +23,7 @@ router.put('/fundi-profile', protect, fundiOnly, userController.updateFundiProfi
 router.patch('/availability', protect, fundiOnly, userController.updateAvailability);
 
 // Admin routes
+router.get('/admin/all', protect, adminOnly, userController.getAllUsers);
 router.get('/admin/pending-fundis', protect, adminOnly, userController.getPendingFundis);
 router.patch('/admin/fundi/:id/status', protect, adminOnly, userController.updateFundiStatus);
 
