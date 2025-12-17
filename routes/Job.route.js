@@ -16,6 +16,8 @@ router.patch('/:id/proposals/:proposalIndex/accept', protect, jobController.acce
 router.patch('/:id/approve', protect, jobController.approveCompletion);
 
 // Protected fundi routes
+router.get('/fundi/proposals', protect, fundiOnly, jobController.getFundiProposals);
+router.get('/fundi/proposals/stats', protect, fundiOnly, jobController.getFundiProposalStats);
 router.post('/:id/submit-proposal', protect, fundiOnly, jobController.submitProposal);
 router.patch('/:id/start', protect, jobController.startJob);
 router.patch('/:id/complete', protect, jobController.completeJob);

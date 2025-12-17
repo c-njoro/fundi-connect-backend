@@ -85,9 +85,6 @@ exports.getAllJobs = async (req, res) => {
 
     if (status) {
       query.status = status;
-    } else {
-      // Default: show only posted jobs for public view
-      query.status = 'posted';
     }
 
     if (serviceId) {
@@ -352,7 +349,7 @@ exports.submitProposal = async (req, res) => {
       proposal,
     });
 
-    job.status = 'applied';
+    
     await job.save();
 
     // Populate the new proposal
@@ -756,6 +753,140 @@ exports.getMyJobs = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch your jobs',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get all proposals submitted by a fundi
+// @route   GET /api/jobs/fundi/proposals
+// @access  Private (Fundi only)
+exports.getFundiProposals = async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+
+    // Build query to find jobs where fundi has submitted proposals
+    const query = {
+      'proposals.fundiId': req.userId,
+    };
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Find all jobs where this fundi has proposals
+    const jobs = await Job.find(query)
+      .populate('serviceId', 'name category icon')
+      .populate('customerId', 'profile.firstName profile.lastName profile.avatar location')
+      .sort({ 'proposals.appliedAt': -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Filter and format the proposals for this fundi
+    const proposals = jobs.map(job => {
+      // Find this fundi's proposal in the job
+      const fundiProposal = job.proposals.find(
+        p => p.fundiId.toString() === req.userId.toString()
+      );
+
+      return {
+        _id: fundiProposal._id,
+        jobId: job._id,
+        jobTitle: job.jobDetails.title,
+        jobDescription: job.jobDetails.description,
+        jobStatus: job.status,
+        service: job.serviceId,
+        customer: job.customerId,
+        location: job.location,
+        estimatedBudget: job.jobDetails.estimatedBudget,
+        urgency: job.jobDetails.urgency,
+        scheduling: job.scheduling,
+        proposal: {
+          proposedPrice: fundiProposal.proposedPrice,
+          estimatedDuration: fundiProposal.estimatedDuration,
+          proposal: fundiProposal.proposal,
+          status: fundiProposal.status,
+          appliedAt: fundiProposal.appliedAt,
+        },
+        agreedPrice: job.agreedPrice,
+        createdAt: job.createdAt,
+      };
+    });
+
+    // Filter by proposal status if provided
+    let filteredProposals = proposals;
+    if (status) {
+      filteredProposals = proposals.filter(p => p.proposal.status === status);
+    }
+
+    // Count total proposals
+    const totalJobs = await Job.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: filteredProposals.length,
+      total: totalJobs,
+      page: parseInt(page),
+      pages: Math.ceil(totalJobs / parseInt(limit)),
+      data: filteredProposals,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch proposals',
+      error: error.message,
+    });
+  }
+};
+
+// @desc    Get proposal statistics for a fundi
+// @route   GET /api/jobs/fundi/proposals/stats
+// @access  Private (Fundi only)
+exports.getFundiProposalStats = async (req, res) => {
+  try {
+    // Find all jobs where this fundi has proposals
+    const jobs = await Job.find({
+      'proposals.fundiId': req.userId,
+    });
+
+    // Calculate statistics
+    const stats = {
+      totalProposals: 0,
+      pending: 0,
+      accepted: 0,
+      rejected: 0,
+      successRate: 0,
+    };
+
+    jobs.forEach(job => {
+      const fundiProposal = job.proposals.find(
+        p => p.fundiId.toString() === req.userId.toString()
+      );
+
+      if (fundiProposal) {
+        stats.totalProposals++;
+        
+        if (fundiProposal.status === 'pending') {
+          stats.pending++;
+        } else if (fundiProposal.status === 'accepted') {
+          stats.accepted++;
+        } else if (fundiProposal.status === 'rejected') {
+          stats.rejected++;
+        }
+      }
+    });
+
+    // Calculate success rate
+    if (stats.totalProposals > 0) {
+      stats.successRate = Math.round((stats.accepted / stats.totalProposals) * 100);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: stats,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch proposal statistics',
       error: error.message,
     });
   }
