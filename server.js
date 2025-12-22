@@ -10,6 +10,7 @@ const serviceRoutes = require('./routes/Service.route');
 const reviewRoutes = require('./routes/Review.route');
 const notificationRoutes = require('./routes/Notification.route');
 const messageRoutes = require('./routes/Message.route');
+const adminRoutes = require('./routes/Admin.route');
 
 // Load environment variables
 dotenv.config();
@@ -31,7 +32,7 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
-
+app.use('/api/admin', adminRoutes);
 // Routes
 app.get('/', (req, res) => {
   res.send('API is running...');
