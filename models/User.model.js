@@ -159,6 +159,7 @@ const userSchema = new mongoose.Schema(
         accountNumber: { type: String },
         bankName: { type: String },
         mpesaNumber: { type: String, match: [/^(\+254|0)[17]\d{8}$/, 'Invalid M-Pesa number'] },
+        paystackRecipientCode: { type: String },
       },
 
       // Additional fundi status fields

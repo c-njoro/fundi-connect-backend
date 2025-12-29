@@ -2,6 +2,7 @@ const Job = require('../models/Job.model');
 const User = require('../models/User.model');
 const Service = require('../models/Service.model');
 const notificationService = require('../services/notification.service');
+const { approveAndReleaseJob } = require('../services/jobSettlement.service');
 
 
 
@@ -424,20 +425,33 @@ exports.acceptProposal = async (req, res) => {
     // Assign job to fundi
     job.fundiId = proposal.fundiId;
     job.agreedPrice = proposal.proposedPrice;
-    job.status = 'assigned';
+    
 
     // Set payment to escrow if not cash
+    let message = "";
+    
     if (job.payment.method !== 'cash') {
-      job.payment.status = 'escrow';
-      job.payment.escrowAmount = proposal.proposedPrice;
+      job.status = 'pending_payment_escrow';
+      // job.payment.status = 'escrow';
+      // job.payment.escrowAmount = proposal.proposedPrice;
+      message = 'Payment to escrow initiated. Please proceed with payment to start the job.';
+    } else {
+      
+      job.status = 'assigned';
+      message = "The job has been assigned successfully."
     }
 
     await job.save();
 
     res.status(200).json({
       success: true,
-      message: 'Proposal accepted successfully',
+      message: message,
       data: job,
+      nextStep: {
+        action: 'initiate_payment',
+        endpoint: `/api/payments/escrow/${job._id}`,
+        amount: job.agreedPrice,
+      },
     });
   } catch (error) {
     res.status(400).json({
@@ -467,6 +481,13 @@ exports.startJob = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to start this job',
+      });
+    }
+
+    if (job.status === 'pending_payment_escrow') {
+      return res.status(400).json({
+        success: false,
+        message: 'Your proposal is accepted but payment not escrowed to the system, please wait for customer to complete the paymnt before starting the job.',
       });
     }
 
@@ -629,81 +650,28 @@ exports.completeJob = async (req, res) => {
 // @desc    Approve job completion and release payment
 // @route   PATCH /api/jobs/:id/approve
 // @access  Private (Customer only)
+
+
 exports.approveCompletion = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id);
+    const result = await approveAndReleaseJob({
+      jobId: req.params.id,
+      customerId: req.userId,
+    });
 
-    if (!job) {
-      return res.status(404).json({
-        success: false,
-        message: 'Job not found',
-      });
-    }
-
-    // Check if user is the customer
-    if (job.customerId.toString() !== req.userId.toString()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Not authorized to approve this job',
-      });
-    }
-
-    if (job.status !== 'completed') {
-      return res.status(400).json({
-        success: false,
-        message: 'Job must be completed before approval',
-      });
-    }
-
-    job.completion.customerApproved = true;
-
-    // Release payment if in escrow
-    if (job.payment.status === 'escrow') {
-      job.payment.status = 'released';
-      job.payment.releaseDate = new Date();
-    }
-
-    
-
-    await job.save();
-
-    await notificationService.notifyPaymentReceived(
-      job.fundiId,
-      job.agreedPrice || job.actualPrice,
-      job._id
-    );
-
-    // Update fundi's completed jobs count
-    const fundi = await User.findById(job.fundiId);
-    if (fundi) {
-      await fundi.incrementCompletedJobs();
-    }
-
-    //add this job to fundi portfolio
-    if(fundi){
-      fundi.fundiProfile.portfolio.push({
-        title: job.jobDetails.title,
-        description: job.jobDetails.description,
-        images: job.completion.completionImages,
-        completedDate: job.completion.completedAt,
-      });
-      await fundi.save();
-    }
-  
-
-    res.status(200).json({
+    res.status(200).json({  
       success: true,
-      message: 'Job completion approved and payment released',
-      data: job,
+      message: 'Job approved and settled successfully',
+      data: result,
     });
   } catch (error) {
     res.status(400).json({
       success: false,
-      message: 'Failed to approve job completion',
-      error: error.message,
+      message: error.message,
     });
   }
 };
+
 
 // @desc    Get user's jobs (as customer or fundi)
 // @route   GET /api/jobs/my-jobs

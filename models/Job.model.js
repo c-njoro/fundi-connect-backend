@@ -72,16 +72,48 @@ const paymentSchema = new mongoose.Schema(
     method: {
       type: String,
       enum: ['mpesa', 'card', 'cash'],
-      required: true,
+required: true,
+default: 'mpesa',
     },
     status: {
       type: String,
-      enum: ['pending', 'escrow', 'released', 'refunded'],
+      enum: ['pending', 'escrow', 'released', 'refunded', 'failed'],
       default: 'pending',
     },
-    transactionId: { type: String, trim: true },
+
+
+    accessCode: { type: String }, // Paystack access code
+    
+    // Escrow details
     escrowAmount: { type: Number, default: 0 },
+    escrowDate: { type: Date },
+    escrowTransactionId: { type: String }, // M-Pesa transaction ID
+    escrowReference: { type: String }, // Your internal reference
+    
+    // Release details
+    releaseAmount: { type: Number },
     releaseDate: { type: Date },
+    releaseTransactionId: { type: String },
+    releaseReference: { type: String },
+
+        // Transfer status tracking
+        transferStatus: { type: String }, // 'success', 'failed', 'pending'
+        transferCompletedDate: { type: Date },
+        transferFailureReason: { type: String },
+    
+    // Refund details (if job cancelled)
+    refundAmount: { type: Number },
+    refundDate: { type: Date },
+    refundTransactionId: { type: String },
+    refundReason: { type: String },
+    
+    // Platform commission
+    platformFee: { type: Number, default: 0 },
+    platformFeePercentage: { type: Number, default: 10 }, // 10% commission
+    
+    // Payment metadata
+    paymentProvider: { type: String ,default: 'paystack'}, // 'flutterwave', 'daraja', etc
+    providerResponse: { type: Object }, // Store full response for debugging
   },
   { _id: false }
 );
@@ -162,6 +194,7 @@ const jobSchema = new mongoose.Schema(
       enum: [
         'posted',
         'applied',
+        'pending_payment_escrow',
         'assigned',
         'in_progress',
         'completed',

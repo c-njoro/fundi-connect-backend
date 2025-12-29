@@ -3,6 +3,9 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
+// Load environment variables
+dotenv.config();
+
 //routers
 const userRoutes = require('./routes/User.route');
 const jobRoutes = require('./routes/Job.route');
@@ -11,9 +14,8 @@ const reviewRoutes = require('./routes/Review.route');
 const notificationRoutes = require('./routes/Notification.route');
 const messageRoutes = require('./routes/Message.route');
 const adminRoutes = require('./routes/Admin.route');
+const paymentRoutes = require('./routes/Payment.route');
 
-// Load environment variables
-dotenv.config();
 
 // Initialize app
 const app = express();
@@ -33,6 +35,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentRoutes);
 // Routes
 app.get('/', (req, res) => {
   res.send('API is running...');
