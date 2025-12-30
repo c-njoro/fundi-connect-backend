@@ -7,6 +7,7 @@ const connectDB = require('./config/db');
 dotenv.config();
 
 //routers
+
 const userRoutes = require('./routes/User.route');
 const jobRoutes = require('./routes/Job.route');
 const serviceRoutes = require('./routes/Service.route');
@@ -15,6 +16,7 @@ const notificationRoutes = require('./routes/Notification.route');
 const messageRoutes = require('./routes/Message.route');
 const adminRoutes = require('./routes/Admin.route');
 const paymentRoutes = require('./routes/Payment.route');
+const uploadRoutes = require('./routes/Upload.route')
 
 
 // Initialize app
@@ -27,6 +29,33 @@ connectDB();
 app.use(cors());
 app.use(express.json()); // Parse JSON request bodies
 
+
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File is too large. Maximum size is 5MB.',
+      });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        message: 'Too many files. Maximum is 10 files.',
+      });
+    }
+  }
+  
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+  
+  next();
+});
+
 // Use routes
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
@@ -36,6 +65,9 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/upload', uploadRoutes)
+
+
 // Routes
 app.get('/', (req, res) => {
   res.send('API is running...');
